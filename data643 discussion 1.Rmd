@@ -1,0 +1,18 @@
+---
+title: "data643 discussion 1"
+author: "Dan Wigodsky"
+date: "June 12, 2018"
+output: html_document
+---
+
+<body style="background: 
+linear-gradient(63deg, transparent 24%, #f9f0c7 8%),linear-gradient(63deg, transparent 33%, #e8deb4 29%, #e8deb4 18%, transparent 71%), #e8deb4;background-size: 10px 10px;">
+<h4><span style="color:#0c3d8c">Metacritic's score is based on scores by reviewers.  It is weighted by the value Metacritic places on each reviewer.  It only takes professional reviewers' grades into account.  Final reviews are color coded by range.</h4>
+
+<h4><span style="color:#0c3d8c">Rottentomatoes uses all reviewers.  It adds a layer of estimation by staff.  They determine if it's likely that a score will drop.  Part of that determination is based on how many top critics rated it and how wide a release it has.  (In addition, they offer a rating by users.)</h4>
+
+<h4><span style="color:#0c3d8c">IMDB adds a filter to make sure votes are genuine.  That helps prevent people from gaming the system.  People can make or lose a lot of money by getting a different rating.  Ultimately, a recommender system would lose trust if it gave skewed results too often.</h4>
+
+<h4><span style="color:#0c3d8c">I like Rottentomatoes' system because two sytems are offered.  I know that my mood for type of film changes at different times.  Sometimes, I want a very serious movie.  Top critics are usually good at rating movies meant to be serious.  Other time, I may want a movie that is relaxing and fun.  Sometimes, critics turn their noses up at that type of movie.  I also don't have a usual taste for movies.  Critics and many audiences may like a lot of comic book movies, but I never will.  If I can look at a rating that was likely made by fans of a particular type of movie, I may get a better sense of how good it was to people who expected to like it.</h4>
+
+<h4><span style="color:#0c3d8c">A way to help reduce the impact of an attack might be to weight ratings based on their social proximity to an end user.  That user could be connected closer to reviewers that were useful for the user in the past.  Or it could weight social connections that the user actively declares (like followers or friends).</h4>
