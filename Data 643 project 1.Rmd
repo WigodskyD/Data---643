@@ -1,0 +1,113 @@
+---
+title: "Data 643 project 1"
+author: "Dan Wigodsky"
+date: "June 8, 2018"
+output: html_document
+---
+
+<body style="background: 
+linear-gradient(13deg, #d0ecf2 13%, transparent 43%) 3px 0, linear-gradient(63deg, transparent 24%, #e8faff 28%),linear-gradient(63deg, transparent 33%, #d0ecf2 29%, #91cbd6 18%, transparent 71%), #d0ecf2;background-size: 7px 5px;">
+<h1><span style="color:#1f5aba"><font face="garamond"><b><center>Basic Recommender System</h1></center>
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>task:  Create a recommender to predict a rating of a U.S. President based on user bias and President bias, compared to an average rating. </h2>
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+options(width=120)
+library(recommenderlab)
+set.seed(37)
+Pres.df<-data.frame(read.csv("C:/Users/dawig/Desktop/CUNY/Recommender Systems/pres_ratings.csv"))
+testing_indices<-sample(1:length(Pres.df[,1]),30)
+testing_set<-Pres.df[testing_indices,]
+training_set<-Pres.df[-testing_indices,]
+pres_row<-rep(NA,10)
+```  
+<h2><span style="color:#0c3d8c"><center><font face="garamond"><b>...</center></h2>
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>15 people rated 10 US presidents on a scale of 1 to 5.  The Presidents rated were: Ronald Reagan, Abraham Lincoln, John Quincy Adams, Gerald Ford, John F Kennedy, Franklin Pierce, Herbert Hoover, William McKinley, Andrew Jackson and Thomas Jefferson. People rated between 5 and 10 of the presidents and didn't rate the remaining presidents.  The matrix of ratings is:
+<h2><span style="color:#0c3d8c"><center><font face="garamond"><b>...</center></h2>
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>To create a prediction for each user/president pair, we calculate a mean for all of the entries.  We found out how nice/harsh a rater was by calculating the difference between user average and total average.  We calculated the difference from the mean for each president.  Our predicted rating was made up of the overall average, a user bias and a president average.
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+pres_matrix<-pres_row
+for(i in 1:14){pres_matrix<-rbind(pres_matrix,pres_row)}
+rownames(pres_matrix)<-c(1:15)
+for (i in 1:98){for (j in 1:15){for (k in 1:10) {if (training_set[i,1]==j && training_set[i,2]==k){pres_matrix[j,k]<-training_set[i,3]}}}}
+colnames(pres_matrix)<-c('Ronald Reagan','Abraham Lincoln','John Quincy Adams','Gerald Ford','John F Kennedy','Franklin Pierce','Herbert Hoover','William McKinley','Andrew Jackson','Thomas Jefferson')
+pres_matrix
+```  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The mean rating for the training set, by itsself, is  
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+mean_of_training_data<-mean(pres_matrix,na.rm = TRUE)
+RMSE<-sum((pres_matrix-mean_of_training_data)^2,na.rm = TRUE)
+RMSE<-RMSE/length(training_set[,1])
+mean_of_training_data
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The root mean square error for the training set, by itsself, is  
+```{r warning=FALSE,message=FALSE,echo=FALSE}  
+RMSE
+col_then_row_means<-rep(0,15)
+col_then_row_means<-rbind(col_then_row_means,col_then_row_means)
+for (i in 1:15) {col_then_row_means[2,i]<- (mean(pres_matrix[i,],na.rm = TRUE))}
+for (i in 1:10) {col_then_row_means[1,i]<- (mean(pres_matrix[,i],na.rm = TRUE))}
+rownames(col_then_row_means)<-c('columns','rows')
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The mean for each column and row in the training set, by itsself, is  
+```{r warning=FALSE,message=FALSE,echo=FALSE}  
+col_then_row_means
+bias_matrix<-col_then_row_means-mean_of_training_data
+bias_matrix[1,c(11:15)]<-NA
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The bias for each column and row in the training set, by itsself, is  
+```{r warning=FALSE,message=FALSE,echo=FALSE}  
+bias_matrix
+baseline_predictor_training<-pres_matrix
+for(i in 1:10) {for (j in 1:15){baseline_predictor_training[j,i]<- (mean_of_training_data+bias_matrix[1,i]+bias_matrix[2,j]) }  }
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The baseline predictors for each user and president is
+```{r warning=FALSE,message=FALSE,echo=FALSE} 
+baseline_predictor_training
+RMSE_baseline_training<-sum((baseline_predictor_training-mean_of_training_data)^2,na.rm = TRUE)
+RMSE_baseline_training<-RMSE_baseline_training/150
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The root mean square error of the training baseline predictor, is
+```{r warning=FALSE,message=FALSE,echo=FALSE} 
+RMSE_baseline_training
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>After predicting the rating for each user, for each president, we want to test it using our test data.  The root mean square error of the test data, without using a prediction model, is
+```{r warning=FALSE,message=FALSE,echo=FALSE} 
+testing_row<-rep(NA,10)
+testing_matrix<-testing_row
+for(i in 1:14){testing_matrix<-rbind(testing_matrix,testing_row)}
+rownames(testing_matrix)<-c(1:15)
+#-------------------------
+for (i in 1:30){for (j in 1:15){for (k in 1:10) {if (testing_set[i,1]==j && testing_set[i,2]==k){testing_matrix[j,k]<-testing_set[i,3]}}}}
+mean_of_test_data<-mean(testing_matrix,na.rm = TRUE)
+RMSE_testing<-sum((testing_matrix-mean_of_test_data)^2,na.rm = TRUE)
+RMSE_testing<-RMSE_testing/length(testing_set[,1])
+RMSE_testing
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The matrix for our testing data is:
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+testing_matrix
+#-------------------------
+RMSE_baseline_testing<-sum((baseline_predictor_training-testing_matrix)^2,na.rm = TRUE)
+RMSE_baseline_testing<-RMSE_baseline_testing/30
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The root mean square error for the testing data, taking the recommender model into account, is
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+RMSE_baseline_testing
+```  
+  
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>The ratio of the RMSE~raw~ to RMSE~modeled~ is:
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+RMSE_testing/RMSE_baseline_testing
+```  
+  
+    
+<h2><span style="color:#0c3d8c"><font face="garamond"><b>Our model successfully reduced the root mean square error to half of what it was without a model.
+```{r warning=FALSE,message=FALSE,echo=FALSE}
