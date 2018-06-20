@@ -1,0 +1,157 @@
+---
+title: "Data 643 project 2"
+author: "Dan Wigodsky"
+date: "June 14, 2018"
+output: html_document
+---
+<body style="background: 
+linear-gradient(13deg, #d0ecf2 13%, transparent 43%) 3px 0, linear-gradient(63deg, transparent 24%, #e8faff 28%),linear-gradient(63deg, transparent 33%, #d0ecf2 29%, #91cbd6 18%, transparent 71%), #d0ecf2;background-size: 7px 5px;">
+
+<h1><span style="color:#285091"><font face="garamond"><b><center>Joke Recommender:</center></h1>
+<h1><span style="color:#285091"><font face="garamond"><b><center>Collaborative Filters</center></h1>
+<h1><span style="color:#285091"><font face="garamond"><b><center>...</center></h1>
+<h2><span style="color:#1f5aba"><font face="garamond"><b><center>Employer to applicant: "In this job we need someone who is responsible."  
+  
+Applicant: "I'm the one you want. On my last job, every time anything went wrong, they said I was responsible." </h2></center>
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+options(width=140)
+library(recommenderlab)
+library(ggplot2)
+library(gridExtra)
+library(kableExtra)
+set.seed(37)
+#joke_ratings<-as.matrix(read.csv("https://raw.githubusercontent.com/WigodskyD/data-sets/master/jester-data-2.csv",header=FALSE,stringsAsFactors = FALSE))
+joke_ratings<-as.matrix(read.csv("C:/Users/dawig/Desktop/CUNY/Recommender Systems/joke_database/jester-data-2.csv",header=FALSE,stringsAsFactors = FALSE))
+joke_ratings[joke_ratings > 11] <-NA
+joke_ratings_rrm <- as(joke_ratings, "realRatingMatrix")
+str(joke_ratings_rrm)
+head(joke_ratings_rrm)
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>Utilizing the Jester dataset(source at end), we created a ratings recommender system for 101 jokes and 23500 users.  We turned it into a realRatingMatrix and then segregated training data from testing data.  We were able to put up to 36 jokes into the training set for each user.</h2>  
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+ratings<-as.data.frame(getRatings(joke_ratings_rrm))
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>Our distribution of ratings shows that more jokes got higher ratings, resulting in a left skewed rating set.</h2> 
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+qplot(ratings, geom="histogram",bins=30)+ theme(panel.background = element_rect(fill = '#bedce8')) 
+percentage_training<-.85
+items_to_keep<-36
+n_eval<-1
+rating_threshold<-5
+eval_sets<-evaluationScheme(data=joke_ratings_rrm,method="split",train=percentage_training,given=items_to_keep,k = n_eval,goodRating=rating_threshold)
+str(eval_sets)
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>Our set of jokes in the test set has a mode at 63 that dwarfs all of the other sizes.  In the mid 30s, the next larger size of testing jokes is located. Many users rated 99 jokes.    
+  
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+plot.a<-qplot(rowCounts(getData(eval_sets,"unknown"))) + geom_histogram(binwidth=.5) + ggtitle("unknown items by the users")+ theme(panel.background = element_rect(fill = '#bedce8')) +labs(x="number to rate in test set",y="Density,number of users")
+plot.b<-qplot(rowCounts(getData(eval_sets,"unknown"))) + geom_histogram(bins=40) + ggtitle("unknown items by the users")+ theme(panel.background = element_rect(fill = '#bedce8')) +labs(x="number to rate in test set",y="Density,number of users")+xlim(60,70)
+grid.arrange(plot.a, plot.b, nrow = 1)
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>To look at the similarity between jokes, we create at a matrix of the similarity between jokes for the first ten users.  The later set of jokes, in a lighter color along the right and top, is more different from other jokes.  Pockets of the earlier jokes are quite alike.</h2>  
+  
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+similarity_items<-similarity(joke_ratings_rrm[1:10,],method='cosine',which='items')
+image(as.matrix(similarity_items),main="Item similarity")
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>Looking at jokes 70-100, and their ratings among all users, we see less similarity.  These jokes appear to be more different from each other and from the earlier jokes.</h2>  
+  
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+similarity_items<-similarity(joke_ratings_rrm[,70:100],method='cosine',which='items')
+image(as.matrix(similarity_items),main="Item similarity")
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b><center>...</center></h2>
+<h2><span style="color:#1f5aba"><font face="garamond"><b>For our first model, we entertain an item-based collaborative filtering method.  We use the default cosine distance method.</h2>  
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+training_set<-getData(eval_sets,"train")
+rec_item <- Recommender(training_set, method = "IBCF")
+rec_item
+model_info<-getModel(rec_item)
+items_to_recommend<-5
+eval_prediction_item<-predict(object=rec_item,newdata=getData(eval_sets,"known"),n=items_to_recommend,type="ratings")
+eval_accuracy_item<-calcPredictionAccuracy(x=eval_prediction_item,data=getData(eval_sets,"unknown"),byUser=TRUE)
+head(eval_accuracy_item)
+mean(eval_accuracy_item[,1],na.rm = TRUE)
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>After calculating the Root Mean Square Error for our model and displaying the average and the first 6 users' Root Mean Square Error, we became concerned that training set, with up to 36 jokes per user, was too sparse.  We created a separate model, filtered for users with a minimum of 70 ratings.  The new RMSE, at 4.3468, was not better, and wouldn't create a model worth eliminating users.  (It also didn't lead to quicker runtime.)  In the following plot, we can see that RMSE from user to user is fairly normal, but right-skewed.  Many users have a RMSE close to 4.5, meaning that their user experience should not be that different.  The users in the tail of the distribution should experience worse recommendations.</h2>
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+qplot(eval_accuracy_item[,"RMSE"])+geom_histogram(binwidth = .1)+ggtitle("Distribution of the RMSE by user")+theme(panel.background = element_rect(fill = '#bedce8'))
+results_item<-evaluate(x=eval_sets,method = "IBCF",n=seq(2,64,2))
+head(getConfusionMatrix(results_item)[[1]],100)
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>To evaluate our model, we look at the confusion matrix for the likelihood of detecting good and bad jokes (for user 1).  At a size of 64, our true negatives go to 1 and our false negatives go to 0.  We can see the tradeoff between sensitivity and specificity.  When we plot the ROC curve, it moves nearly straight along the y=x line.  Using Item-Based CF and cosine distance, our model does not perform very well. </h2>
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+plot(results_item,annotate=FALSE,main="ROC curve")
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>When we look at the precision-recall curve, we find a maximum at 48.  A recommendation set of 48 will lead to the optimum set, according to this model and this measure.  On a practical basis, this may be too many.  It represents almost half of the set.  It may make a good "joke-of-the-week" set.</h2>
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+plot(results_item,"prec/rec", annotate=FALSE, main="Precision-recall")
+```
+
+```{r warning=FALSE,message=FALSE,eval=FALSE}
+#------------------------
+#This set could include a UBCF model.  To present more models would require dimension reduction methods to speed up model creation. 
+#------------------------
+rec_user <- Recommender(training_set, method = "UBCF")
+rec_user
+model_info<-getModel(rec_user)
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>To look for a better model, we create a list of 5 models: Item-Based Collaborative Filtering and User-Based Collaborative Filtering, each with Pearson Correlation and Cosine distance.  A random model is the last of the five.</h2>
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+set_of_models<- list (
+  IBCF_cos=list(name="IBCF",param=list(method="cosine")),
+  IBCF_cor=list(name="IBCF",param=list(method="pearson")),
+  UBCF_cos=list(name="UBCF",param=list(method="cosine")),
+  UBCF_cor=list(name="UBCF",param=list(method="pearson")),
+  random=list(name="RANDOM",param=NULL)
+                      )
+list_results<-evaluate(x=eval_sets,method=set_of_models,n=seq(5,70,5))
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b>For a set of size 5 to 70, we look at mean precision, recall, true positive and false positive rates. Then, we plot a ROC curve and a precision-recall curve to look at all of the models.  Like before, we see that our first model was nearly as bad as a random guess.  An item-based CF model utilizing Pearson correlation works much better, especially if our goal is high recall.  That model would give us a decent joke-a-week calendar, with 52 suggestions.  In a lower range, a User-Based CF model with correlation works much better.  If we want a top 5 or top 10 list, this should be the appropriate model.  In our last graphs, we can see the superiority of both user-based models, which deliver a better recall and precision.  For a small list, the version with correlation is the clear winner.</h2>
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+avg_matrices<-lapply(list_results,avg)
+head(avg_matrices$IBCF_cos[,5:8])
+plot(list_results,annotate=1,legend="topleft") 
+title("Model Comparison by ROC curve")
+plot(list_results,"prec/rec",annotate=1,legend="bottomright") 
+title("Model Comparison by Precision-recall")
+```
+
+```{r warning=FALSE,message=FALSE,echo=FALSE}
+list_results<-evaluate(x=eval_sets,method=set_of_models,n=seq(5,15,5))
+avg_matrices<-lapply(list_results,avg)
+#head(avg_matrices$IBCF_cos[,5:8])
+plot(list_results,annotate=1,legend="topleft") 
+title("Small-N Model Comparison by ROC curve")
+plot(list_results,"prec/rec",annotate=1,legend="bottomright") 
+title("Small-N Model Comparison by Precision-recall")
+```  
+  
+<h2><span style="color:#1f5aba"><font face="garamond"><b></h2>With our best model, we create a top-5 model for user 1000.  It suggests jokes 70,69,11,55 and 67.  Among those jokes: "In this job we need someone who is responsible."  Applicant: "I'm the one you want. On my last job, every time anything went wrong, they said I was responsible."  </h2>
+
+```{r warning=FALSE,message=FALSE,eval=FALSE}
+testing_set<-getData(eval_sets,"unknown")
+rec_user<- Recommender(testing_set, method = "UBCF",parameter=list(method="pearson"))
+items_to_recommend<-5
+eval_prediction_user<-predict(object=rec_user,newdata=getData(eval_sets,"unknown"),n=items_to_recommend)
+eval_prediction_user@items[[1000]]
+```  
+  
+Source for dataset: Eigentaste: A Constant Time Collaborative Filtering Algorithm. Ken Goldberg, Theresa Roeder, Dhruv Gupta, and Chris Perkins. Information Retrieval, 4(2), 133-151. July 2001.
