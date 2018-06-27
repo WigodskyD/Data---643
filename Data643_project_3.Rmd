@@ -1,0 +1,302 @@
+---
+title: "Data 643 project 3"
+author: "Dan Wigodsky"
+date: "June 19, 2018"
+output: html_document
+---
+<body style="background: 
+linear-gradient(13deg, #d0ecf2 13%, transparent 43%) 3px 0, linear-gradient(63deg, transparent 24%, #e8faff 28%),linear-gradient(63deg, transparent 33%, #d0ecf2 29%, #91cbd6 18%, transparent 71%), #d0ecf2;background-size: 7px 5px;">  
+
+<h1><span style="color:#285091"><font face="garamond"><b><center>...</h1></center>
+
+<h1><span style="color:#062859"><font face="garamond"><b><center>Computation Time and the Singular Value Decomposition</h1></center>  
+  
+<h1><span style="color:#285091"><font face="garamond"><b><center>...</h1></center>
+
+<h2><span style="color:#285091"><font face="garamond"><b>In video 50 from the series Mining Massive Datasets - Stanford University (https://youtu.be/K38wVcdNuFc), a drawback for Singular Value Decomposition is mentioned: the decomposition may be more dense than the original matrix, slowing computation time.  We want to explore a related question; does the density of the original matrix affect the computation time to create a model using Singular Value Decomposition?</h2>  
+  
+<h2><span style="color:#285091"><font face="garamond"><b>The original matrix is the joke database from project 2.  The original dataset contained 101 jokes and 23,500 users.  It contains 72% non-NA values.  For NA values in this and all subsequent matrices, we changed NA to -2, assuming that, on average, users were less likely to rate items thet disliked. We computed 7 sets of 19 sets of models. </h2>  
+  
+<h2><span style="color:#285091"><font face="garamond"><b>The primary sets contained ratings for between 5 and 95 features in the feature vector.  To get a sense of how the number of features affected the RMSE, we graphed 3 sets of these sets.  Strictly speaking, 95 would be too large a set to use with the irlba method and only 101 jokes (as per a warning from the package.)  However, we wanted to get a sense of when the gains from adding a larger set of features would level off as we increased the size.</h2>
+
+<h2><span style="color:#285091"><font face="garamond"><b>The Irlba package uses <i>implicitly restarted Lanczos bi-diagonalization</i>.  This method computes singular triples faster than the SVD method.  Methods used by the irlba package to accomplish this task include: Lanczos bidiagonalization, implicit restarting, and harmonic Ritz values.  The end result also creates 3 matrices including a feature vector of singular values. 
+(https://youtu.be/3y_0-v9w_kY, http://www.math.uri.edu/~jbaglama/papers/paper14.pdf)</h2>  
+  
+<h2><span style="color:#285091"><font face="garamond"><b>The original set contained 36 as the minimum number of rated jokes by each user.  For different secondary sets, we capped the number of ratings per user at 40 to 101, by 10.  Each set is more informationally dense than the set before it.</h2>  
+  
+
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+options(width=140)
+library(recommenderlab)
+library(ggplot2)
+library(gridExtra)
+library(kableExtra)
+library(dplyr)
+library(irlba)
+set.seed(37)
+#joke_ratings<-as.matrix(read.csv("https://raw.githubusercontent.com/WigodskyD/data-sets/master/jester-data-2.csv",header=FALSE,stringsAsFactors = FALSE))
+joke_ratings<-as.matrix(read.csv("C:/Users/dawig/Desktop/CUNY/Recommender Systems/joke_database/jester-data-2.csv",header=FALSE,stringsAsFactors = FALSE))
+joke_ratings[joke_ratings > 11] <-NA
+#----------------------------------------------------------------------
+matrix.density<-function(a) {set.sizer<-(is.na(a))
+na.set<-set.sizer
+sum(na.set)
+set.sizer[set.sizer ==FALSE] <-TRUE
+full.set<-set.sizer
+(sum(full.set)-sum(na.set))/sum(full.set)}
+print('original matrix density')
+matrix.density(joke_ratings)
+#-------------------------------------------------------------------------
+densifier<-function(b,c,d){
+joke_count<-rep(0,23500)
+numberer<-0
+for(j in 1:23500){
+for(i in 1:101) { if(!is.na(b[j,i])){numberer<-numberer+1}}
+joke_count[j]<-numberer
+numberer<-0}
+b<-as.data.frame(b)
+b<-cbind(joke_count,b)
+b %>% 
+  filter(joke_count<d)->b
+b <-as.matrix(b[1:length(b[,1]),])
+print (b)
+filtered.set<-paste("C:/Users/dawig/Desktop/CUNY/Recommender Systems",c,sep="/")
+write.to.file<-paste(filtered.set,".csv",sep='')
+print(write.to.file)
+write.csv(b[1:1651,-1],file = write.to.file)
+}
+#---------------------------------RMSE function----------------------------------------
+RMSE <- function(aMatrix){
+  sqrt(mean((aMatrix-joke_ratings1)^2,na.rm=T))
+}
+#-------------------------------------------------------------------------
+```
+
+```{r warning=FALSE,eval=FALSE,message=FALSE}
+#------------------------------------------------------------------------
+densifier(joke_ratings,"filtered1",40)
+densifier(joke_ratings,"filtered2",50)
+densifier(joke_ratings,"filtered3",60)
+densifier(joke_ratings,"filtered4",70)
+densifier(joke_ratings,"filtered5",80)
+densifier(joke_ratings,"filtered6",90)
+densifier(joke_ratings,"filtered7",101)
+#------------------------------------------------------------------------
+```
+
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+read.from.file<-"C:/Users/dawig/Desktop/CUNY/Recommender Systems/filtered1.csv"
+joke_ratings1<-as.matrix(read.csv(read.from.file,header=TRUE,stringsAsFactors = FALSE))
+read.from.file<-"C:/Users/dawig/Desktop/CUNY/Recommender Systems/filtered2.csv"
+joke_ratings2<-as.matrix(read.csv(read.from.file,header=TRUE,stringsAsFactors = FALSE))
+read.from.file<-"C:/Users/dawig/Desktop/CUNY/Recommender Systems/filtered3.csv"
+joke_ratings3<-as.matrix(read.csv(read.from.file,header=TRUE,stringsAsFactors = FALSE))
+read.from.file<-"C:/Users/dawig/Desktop/CUNY/Recommender Systems/filtered4.csv"
+joke_ratings4<-as.matrix(read.csv(read.from.file,header=TRUE,stringsAsFactors = FALSE))
+read.from.file<-"C:/Users/dawig/Desktop/CUNY/Recommender Systems/filtered5.csv"
+joke_ratings5<-as.matrix(read.csv(read.from.file,header=TRUE,stringsAsFactors = FALSE))
+read.from.file<-"C:/Users/dawig/Desktop/CUNY/Recommender Systems/filtered6.csv"
+joke_ratings6<-as.matrix(read.csv(read.from.file,header=TRUE,stringsAsFactors = FALSE))
+read.from.file<-"C:/Users/dawig/Desktop/CUNY/Recommender Systems/filtered7.csv"
+joke_ratings7<-as.matrix(read.csv(read.from.file,header=TRUE,stringsAsFactors = FALSE))
+density.speed<-c(1:7)
+density.speed<-cbind(density.speed,density.speed)
+density.speed[1,1]<-matrix.density(joke_ratings1)
+density.speed[2,1]<-matrix.density(joke_ratings2)
+density.speed[3,1]<-matrix.density(joke_ratings3)
+density.speed[4,1]<-matrix.density(joke_ratings4)
+density.speed[5,1]<-matrix.density(joke_ratings5)
+density.speed[6,1]<-matrix.density(joke_ratings6)
+density.speed[7,1]<-matrix.density(joke_ratings7)
+#------------------------------------------------------------------------
+joke_ratings1<-joke_ratings1[,-1]
+jokeMeans <- apply(joke_ratings1,2,mean,na.rm=TRUE)
+jokeMeans[is.infinite(jokeMeans)]<--2
+userMeans <- apply(joke_ratings1,1,mean,na.rm=TRUE)
+overall.mean<-mean(jokeMeans,na.rm=T)
+joke_ratings1[is.na(joke_ratings1)] <-overall.mean
+userBias<-userMeans - overall.mean 
+jokeBias<-jokeMeans - overall.mean 
+error.rates1<-as.matrix(rep(0,19))
+time.a<-Sys.time()
+for (i in seq(5,95,5)){
+decomp_1<-irlba(joke_ratings1,nu=i,nv=i)
+irlbaPredict<- userMeans + (decomp_1$u * sqrt(decomp_1$d)) %*% (sqrt(decomp_1$d) * t(decomp_1$v))
+error.rates1[(i/5)]<-RMSE(irlbaPredict)
+}
+time.b<-Sys.time()
+density.speed[1,2]<-(time.b-time.a)
+ggplot(x=seq(5,95,5),y=error.rates1)+geom_point(aes(x=seq(5,95,5),y=error.rates1),shape=21,size=4,fill="yellow",alpha=.7)+labs(x="Feature Vector Size",y="RMSE")+ theme(panel.background = element_rect(fill = '#62bdc1'))+ggtitle("RMSE for different sizes of feature vector-sparse")
+```  
+  
+<h2><span style="color:#285091"><font face="garamond"><b>Our first set of models, with the sparsest beginning matrix, shows a convex relationship.  With this model, the tradeoff between feature set size and RMSE shows a model using around 35 would be optimal and going in either direction would cost an increasing amount.  An RMSE of under 3 is acceptable for joke data rated from -10 to 10.  The cost of a bad recommendation, for example, is low.  Novelty or serendipity would be more important qualities.</h2>  
+  
+  
+```{r warning=FALSE,eval=T,message=FALSE}
+RMSE <- function(aMatrix){
+  sqrt(mean((aMatrix-joke_ratings4)^2,na.rm=T))
+}
+#---------------------------
+joke_ratings4<-joke_ratings4[,-1]
+jokeMeans <- apply(joke_ratings4,2,mean,na.rm=TRUE)
+jokeMeans[is.infinite(jokeMeans)]<--2
+userMeans <- apply(joke_ratings4,1,mean,na.rm=TRUE)
+overall.mean<-mean(jokeMeans,na.rm=T)
+joke_ratings4[is.na(joke_ratings4)] <-overall.mean
+userBias<-userMeans - overall.mean 
+jokeBias<-jokeMeans - overall.mean 
+error.rates4<-as.matrix(rep(0,19))
+time.a<-Sys.time()
+for (i in seq(5,95,5)){
+decomp_4<-irlba(joke_ratings4,nu=i,nv=i)
+irlbaPredictb<- userMeans + (decomp_4$u * sqrt(decomp_4$d)) %*% (sqrt(decomp_4$d) * t(decomp_4$v))
+error.rates4[(i/5)]<-RMSE(irlbaPredictb)
+}
+time.b<-Sys.time()
+density.speed[4,2]<-(time.b-time.a)
+```  
+  
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+ggplot(x=seq(5,95,5),y=error.rates4)+geom_point(aes(x=seq(5,95,5),y=error.rates4),shape=21,size=4,fill="yellow",alpha=.7)+labs(x="Feature Vector Size",y="RMSE")+ theme(panel.background = element_rect(fill = '#62bdc1'))+ggtitle("RMSE for different sizes of feature vector-midsize")
+```  
+  
+ 
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+RMSE <- function(aMatrix){
+  sqrt(mean((aMatrix-joke_ratings7)^2,na.rm=T))
+}
+#---------------------------
+joke_ratings7<-joke_ratings7[,-1]
+jokeMeans <- apply(joke_ratings7,2,mean,na.rm=TRUE)
+jokeMeans[is.infinite(jokeMeans)]<--2
+userMeans <- apply(joke_ratings7,1,mean,na.rm=TRUE)
+overall.mean<-mean(jokeMeans,na.rm=T)
+joke_ratings7[is.na(joke_ratings7)] <-overall.mean
+userBias<-userMeans - overall.mean 
+jokeBias<-jokeMeans - overall.mean 
+error.rates7<-as.matrix(rep(0,19))
+time.a<-Sys.time()
+for (i in seq(5,95,5)){
+decomp_7<-irlba(joke_ratings7,nu=i,nv=i)
+irlbaPredictb<- userMeans + (decomp_7$u * sqrt(decomp_7$d)) %*% (sqrt(decomp_7$d) * t(decomp_7$v))
+error.rates7[(i/5)]<-RMSE(irlbaPredictb)
+}
+time.b<-Sys.time()
+density.speed[7,2]<-(time.b-time.a)
+```    
+   
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+ggplot(x=seq(5,95,5),y=error.rates7)+geom_point(aes(x=seq(5,95,5),y=error.rates7),shape=21,size=4,fill="yellow",alpha=.7)+labs(x="Feature Vector Size",y="RMSE")+ theme(panel.background = element_rect(fill = '#62bdc1'))+ggtitle("RMSE for different sizes of feature vector-more dense")
+```    
+
+
+<h2><span style="color:#285091"><font face="garamond"><b>...</h2>  
+<h2><span style="color:#285091"><font face="garamond"><b>For less sparse models, the convexity appears different.  The most full matrix has a gently changing, but largest slope.   For the densest model, the average cost in RMSE is higher for small feature vectors and lower for large feature vectors.  Graphed together, we can see that the range where the sparse matrix shines is when feature vectors are small.  The lowest RMSE can be obtained with a large feature set and the full density matrix.</h2>
+   
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+error.rates<-rbind(error.rates1,error.rates4,error.rates7)
+which.model<-as.matrix(rep(1,19))
+which.model4<-as.matrix(rep(4,19))
+which.model7<-as.matrix(rep(7,19))
+which.model<-rbind(which.model,which.model4,which.model7)
+error.rates<-cbind(error.rates,which.model)
+colnames(error.rates)<-c("error","model")
+error.rates<-as.data.frame(error.rates)
+number.order<-as.matrix(seq(5,95,5))
+number.order<-rbind(number.order,number.order,number.order)
+ggplot(data=error.rates)+geom_point(aes(x=number.order,y=error.rates$error,fill=model),shape=21,size=4,alpha=.7)+labs(x="Feature Vector Size",y="RMSE")+ theme(panel.background = element_rect(fill = '#62bdc1'))+ggtitle("RMSE for different sizes of feature vector - 3 model sets")+ theme(legend.position="none")
+```  
+  
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+RMSE <- function(aMatrix){
+  sqrt(mean((aMatrix-joke_ratings2)^2,na.rm=T))
+}
+#---------------------------
+joke_ratings2<-joke_ratings2[,-1]
+jokeMeans <- apply(joke_ratings2,2,mean,na.rm=TRUE)
+jokeMeans[is.infinite(jokeMeans)]<--2
+userMeans <- apply(joke_ratings2,1,mean,na.rm=TRUE)
+overall.mean<-mean(jokeMeans,na.rm=T)
+joke_ratings2[is.na(joke_ratings2)] <-overall.mean
+userBias<-userMeans - overall.mean 
+jokeBias<-jokeMeans - overall.mean 
+error.rates2<-as.matrix(rep(0,19))
+time.a<-Sys.time()
+for (i in seq(5,95,5)){
+decomp_2<-irlba(joke_ratings2,nu=i,nv=i)
+irlbaPredictb<- userMeans + (decomp_2$u * sqrt(decomp_2$d)) %*% (sqrt(decomp_2$d) * t(decomp_2$v))
+error.rates2[(i/5)]<-RMSE(irlbaPredictb)
+}
+time.b<-Sys.time()
+density.speed[2,2]<-(time.b-time.a)
+RMSE <- function(aMatrix){
+  sqrt(mean((aMatrix-joke_ratings3)^2,na.rm=T))
+}
+#---------------------------
+joke_ratings3<-joke_ratings3[,-1]
+jokeMeans <- apply(joke_ratings3,2,mean,na.rm=TRUE)
+jokeMeans[is.infinite(jokeMeans)]<--2
+userMeans <- apply(joke_ratings3,1,mean,na.rm=TRUE)
+overall.mean<-mean(jokeMeans,na.rm=T)
+joke_ratings3[is.na(joke_ratings3)] <-overall.mean
+userBias<-userMeans - overall.mean 
+jokeBias<-jokeMeans - overall.mean 
+error.rates3<-as.matrix(rep(0,19))
+time.a<-Sys.time()
+for (i in seq(5,95,5)){
+decomp_3<-irlba(joke_ratings3,nu=i,nv=i)
+irlbaPredictb<- userMeans + (decomp_3$u * sqrt(decomp_3$d)) %*% (sqrt(decomp_3$d) * t(decomp_3$v))
+error.rates3[(i/5)]<-RMSE(irlbaPredictb)
+}
+time.b<-Sys.time()
+density.speed[3,2]<-(time.b-time.a)
+RMSE <- function(aMatrix){
+  sqrt(mean((aMatrix-joke_ratings5)^2,na.rm=T))
+}
+#---------------------------
+joke_ratings5<-joke_ratings5[,-1]
+jokeMeans <- apply(joke_ratings5,2,mean,na.rm=TRUE)
+jokeMeans[is.infinite(jokeMeans)]<--2
+userMeans <- apply(joke_ratings5,1,mean,na.rm=TRUE)
+overall.mean<-mean(jokeMeans,na.rm=T)
+joke_ratings5[is.na(joke_ratings5)] <-overall.mean
+userBias<-userMeans - overall.mean 
+jokeBias<-jokeMeans - overall.mean 
+error.rates5<-as.matrix(rep(0,19))
+time.a<-Sys.time()
+for (i in seq(5,95,5)){
+decomp_5<-irlba(joke_ratings5,nu=i,nv=i)
+irlbaPredictb<- userMeans + (decomp_5$u * sqrt(decomp_5$d)) %*% (sqrt(decomp_5$d) * t(decomp_5$v))
+error.rates5[(i/5)]<-RMSE(irlbaPredictb)
+}
+time.b<-Sys.time()
+density.speed[5,2]<-(time.b-time.a)
+RMSE <- function(aMatrix){
+  sqrt(mean((aMatrix-joke_ratings6)^2,na.rm=T))
+}
+#---------------------------
+joke_ratings6<-joke_ratings6[,-1]
+jokeMeans <- apply(joke_ratings6,2,mean,na.rm=TRUE)
+jokeMeans[is.infinite(jokeMeans)]<--2
+userMeans <- apply(joke_ratings6,1,mean,na.rm=TRUE)
+overall.mean<-mean(jokeMeans,na.rm=T)
+joke_ratings6[is.na(joke_ratings6)] <-overall.mean
+userBias<-userMeans - overall.mean 
+jokeBias<-jokeMeans - overall.mean 
+error.rates6<-as.matrix(rep(0,19))
+time.a<-Sys.time()
+for (i in seq(5,95,5)){
+decomp_6<-irlba(joke_ratings6,nu=i,nv=i)
+irlbaPredictb<- userMeans + (decomp_6$u * sqrt(decomp_6$d)) %*% (sqrt(decomp_6$d) * t(decomp_6$v))
+error.rates6[(i/5)]<-RMSE(irlbaPredictb)
+}
+time.b<-Sys.time()
+density.speed[6,2]<-(time.b-time.a)
+colnames(density.speed)<-c('density','elapsed_time')
+density.speed<-as.data.frame(density.speed)
+```  
+  
+<h2><span style="color:#285091"><font face="garamond"><b>Finally, we look at the time cost depending on initial matrix sparsity. We find that the speed appears to increase as the density increases, but it is not a clear relationship.  In this case, the increased time to run 19 models is under a second.  Both models are empirically much quicker than the direct model creation methods used in project 2.  We can see the tradeoff between time and feature set.  We can see how sparcity affects the tradeoff.  In other contexts, this would be an important consideration for model optimization.  For this dataset, however, differences are small and most accurate model should be used.</h2>
+
+```{r warning=FALSE,echo=FALSE,message=FALSE}
+ggplot(data=density.speed)+geom_point(aes(x=density,y=elapsed_time),shape=21,size=4,fill="yellow",alpha=.7)+labs(x="Percent not NA",y="Run Time for 19 Models")+ theme(panel.background = element_rect(fill = '#82a9e0'))+ggtitle("Run Time depending on Matrix Density")
