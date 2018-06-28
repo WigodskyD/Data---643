@@ -1,0 +1,33 @@
+---
+title: "data643 discussion 3"
+author: "Dan Wigodsky"
+date: "June 26, 2018"
+output: html_document
+---
+
+<body style="background: 
+linear-gradient(63deg, transparent 24%, #f9f0c7 8%),linear-gradient(63deg, transparent 33%, #e8deb4 29%, #e8deb4 18%, transparent 71%), #e8deb4;background-size: 10px 10px;">
+<h1><span style="color:#0c3d8c"><center>------------</center></h1>
+
+<h1><span style="color:#0c3d8c"><center>Equality of Opportunity in Supervised Learning</h1>  
+  
+<h4><span style="color:#0c3d8c"><center>Moritz Hardt, Eric Price, Nathan Srebro</center></h4>
+
+<h4><span style="color:#0c3d8c"><center>https://arxiv.org/pdf/1610.02413.pdf</h4>
+  
+<h2><span style="color:#0c3d8c"><center>------------</center></h2>  
+
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;Recommender systems can be used to make important decisions in people's lives.  Because of their increasing importance, it is critical that they allow people and organizations to make fair and equitable decisions.  This article presents an attempt to create a process to minimize discrimination based on membership to a protected group. The constraints the article tries to take into account are:  the process should find an optimal set of criteria; the process should take into account the availability of information; the process should be able to use the abilities of machine learning.</h4> 
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;Misters Hardt, Price and Srebro spend most of the article showing that an optimal model derived using ROC curves and using standard machine learning processes will create an optimal model if it can be shown that the model depends only on the joint distribution of the probability being sought, group membership and the estimator chosen.  Such a model would appropriately determine every individual's likelihood to have the quality sought.
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp; Domain knowledge is important for specifying a model.  If more information can be gathered, especially if it's the correct information gathered correctly, a model will perform better. 
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;The article uses a case study of FICO credit scores.  It compares default rate and ROC curves by racial group.  It entertains the costs associated with models favoring maximized profit, equal opportunity or equal odds.  In different models, different groups lose or gain.  The point of view of the authors is that equalizing opportunity is the fairest model and a good middle ground.
+  
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;  Modeling for credit default produces a better prediction for the largest ethnic group, whites, in the FICO example.  The authors propose a model that uses an adjustment after initial model results.  This is to shift incentives in an appropriate direction.  Without a model, the burdens of incorrectly denying credit, resulting in a false negative, has been felt mostly by consumers.  African American and Hispanic borrowers have paid a price by not receiving loans that they should have.  This article suggests that the burden should be shifted to the modeler.  By adding an adjustment, the model acknowledges that the model for some groups is not optimal.  In order to assume less risk, a company should collect enough proper data to be able to determine default risk better for minority groups.
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;  The goal of an adjusted model would be one where an adjustment dwindles to zero.  This would happen if the model for each ethnic group was equally optimal.  Each would be appropriately responding to the joint distribution, not the distribution conditional on group membership.
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;This model is a good idea.  It delivers a proper incentive to predict risk as effectively as possible.  It attempts to decouple risk from ethnic identity.  Ultimately, providing the best estimate possible will deliver returns and efficiency to consumers and companies.  Machine models can exacerbate inequality.  Deployed properly, they present an opportunity to provide better performance while minimizing discrimination.
