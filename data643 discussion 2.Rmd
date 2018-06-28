@@ -1,0 +1,22 @@
+---
+title: "data643 discussion 2"
+author: "Dan Wigodsky"
+date: "June 12, 2018"
+output: html_document
+---
+
+<body style="background: 
+linear-gradient(63deg, transparent 24%, #f9f0c7 8%),linear-gradient(63deg, transparent 33%, #e8deb4 29%, #e8deb4 18%, transparent 71%), #e8deb4;background-size: 10px 10px;">
+<h2><span style="color:#0c3d8c"><center>Scalability of Recommender Systems </center></h2>  
+  
+<h2><span style="color:#0c3d8c"><center>------------</center></h2>
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;The Scalability for a recommender system is an important problem to solve to make it useful for users.  Already in week 2, recommender systems for our assignments have become too large and unweildy to be able to execute without taking a large amount of time.  To deliver a smooth user experience, a recommender system has to be able to deliver results quickly.</h4>  
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;In the YouTube video, https://youtu.be/3LBgiFch4_g, Christopher Johnson of Spotify describes how they use Spark and distributed computing to deliver recommendations of music to users.
+  
+<h4><span style="color:#0c3d8c">&nbsp;qqq&nbsp;&nbsp;&nbsp;With a decomposed matrix, Spotify sends components of the ratings matrix, along with Y^T^Y, based on the ratings for each song, to separate nodes.  Using Hadoop alone created a bottleneck where information had to be sent back and forth many times.  Each node contains a cache of the matrices it needs to perform work.  This is what makes the rating system faster than distributive computing using Hadoop alone.  A lot less information needs to be sent back and forth because it's saved in the place its needed.  The matrices are put in the places they are needed.  
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;Having a faster implementation of its ratings system allows Spotify to deliver songs to its reported 70 million users efficiently and quickly.  
+  
+<h4><span style="color:#0c3d8c">&nbsp;&nbsp;&nbsp;&nbsp;A recommender system's strength is its number of users.  With information, it can deliver a better recommendation to its users.  Too much information, however, can stop one in its tracks if it can't handle it.  This system described contains 4 levels of optimization.  Matrices allow equations to be solved in a unified framework.  Factorization allows matrices to be solved quicker.  Distributed computing allows many nodes to compute parts of the ratings, all at once.  Caching and "gridifying" allows the distributed parts to hold the data they need.
+
